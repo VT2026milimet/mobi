@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Phòng Thí Nghiệm Ảo - V60.0 Responsive</title>
+    
+    <script src="data.js"></script>
+    <script src="tools.js"></script>
+    <script src="chemicals.js"></script>
+    <script src="glassware.js"></script>
+    <script src="reagents.js"></script>
+    <script src="actions.js"></script>
+    <script src="reactions.js"></script>
+    
+    <script src="https://code.responsivevoice.org/responsivevoice.js?key=mrZyBS2m"></script>
+
+    <style>
+        :root {
+            --primary-blue: #005a82; 
+            --gold-accent: #d4af37; 
+            --white: #ffffff;
+            --bg-light: #f0f7f9; 
+            --safety-green: #2ecc71;
+        }
+        
+        body, html { 
+            margin: 0; padding: 0; 
+            height: 100%; width: 100%;
+            overflow: hidden; 
+            font-family: 'Segoe UI', Arial, sans-serif; 
+            background: radial-gradient(circle, #ffffff 0%, #e8f4f8 100%); 
+            touch-action: none; /* Ngăn chặn pull-to-refresh trên trình duyệt di động */
+        }
+        
+        #stage { 
+            width: 100%; height: 100%; 
+            display: flex; justify-content: center; align-items: center; 
+        }
+        
+        .screen { 
+            position: absolute; 
+            width: 95%; max-width: 1100px; 
+            height: 90vh; max-height: 700px;
+            background: var(--white); 
+            border-radius: 20px; 
+            display: none; 
+            flex-direction: row; 
+            overflow: hidden; 
+            box-shadow: 0 20px 60px rgba(0,0,0,0.15); 
+        }
+        
+        .active { display: flex; }
+        
+        /* Chuyển sang bố cục dọc trên điện thoại */
+        @media (max-width: 768px) {
+            .screen { flex-direction: column; height: 95vh; }
+            .doctor-side { flex: 0.4 !important; border-right: none !important; border-bottom: 4px solid var(--gold-accent); }
+            .content-side { flex: 0.6 !important; padding: 20px !important; }
+            .page1-h1 { font-size: 1.5rem !important; }
+            .doctor-name { font-size: 1.4rem !important; }
+            .description { font-size: 0.95rem !important; margin-bottom: 20px !important; }
+        }
+
+        .doctor-side { 
+            flex: 1.1; background: var(--bg-light); 
+            position: relative; display: flex; align-items: center; justify-content: center; 
+            border-right: 6px solid var(--gold-accent); 
+        }
+        
+        .doctor-container { width: 100%; height: 100%; animation: idleAnt 4s infinite ease-in-out; }
+        @keyframes idleAnt { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.01); } }
+        .doctor-img { width: 100%; height: 100%; object-fit: cover; }
+        
+        .content-side { 
+            flex: 1.3; padding: 40px; 
+            display: flex; flex-direction: column; justify-content: center; 
+            position: relative; overflow-y: auto;
+        }
+        
+        .page1-h1 { color: var(--primary-blue); font-size: 2.2rem; margin-bottom: 10px; }
+        .doctor-name { color: var(--gold-accent); font-size: 2.2rem; font-weight: 700; margin-bottom: 20px; }
+        .description { color: #333; font-size: 1.1rem; line-height: 1.5; margin-bottom: 30px; }
+        
+        .select-box { width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 12px; margin-bottom: 15px; }
+        
+        .btn-main { 
+            background: var(--gold-accent); color: white; border: none; 
+            padding: 15px 30px; border-radius: 50px; font-size: 1.1rem; 
+            font-weight: bold; cursor: pointer; transition: 0.2s; 
+            text-transform: uppercase; 
+        }
+
+        /* Bước 3: Bảo hộ */
+        #step3 { background-image: url('phongthinghiem.jpg'); background-size: cover; position: relative; }
+        .hotspot { position: absolute; cursor: pointer; z-index: 100; }
+        #target-blouse { top: 20%; left: 10%; width: 25%; height: 60%; }
+        #target-glasses { top: 50%; right: 5%; width: 25%; height: 15%; }
+        #target-rules { top: 10%; right: 10%; width: 20%; height: 35%; }
+        .check-mark { position: absolute; color: var(--safety-green); font-size: 40px; display: none; z-index: 110; }
+
+        /* Bước 4: Chọn dụng cụ - Tối ưu Mobile Sidebar */
+        #step4 { flex-direction: row; }
+        @media (max-width: 768px) {
+            #step4 { flex-direction: column; }
+            #s4-sidebar { 
+                width: 100% !important; height: 60px !important; 
+                flex-direction: row !important; overflow-x: auto !important; 
+                padding: 5px !important; border-right: none !important; border-bottom: 2px solid var(--gold-accent);
+            }
+            .s4-cat-btn { white-space: nowrap; padding: 5px 15px !important; }
+            #s4-icon-grid { padding-right: 20px !important; }
+        }
+
+        #s4-sidebar { width: 180px; background: rgba(0, 90, 130, 0.95); display: flex; flex-direction: column; padding: 15px 10px; gap: 8px; }
+        .s4-cat-btn { background: white; color: var(--primary-blue); border: none; padding: 10px; border-radius: 8px; font-weight: bold; font-size: 0.75rem; cursor: pointer; }
+        .s4-cat-btn.active-cat { background: var(--gold-accent); color: white; }
+
+        #s4-main-area { flex: 1; display: flex; flex-direction: column; position: relative; background: #f9f9f9; }
+        #s4-icon-grid { flex: 1; padding: 15px; display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 10px; overflow-y: auto; }
+        .s4-unit { background: white; padding: 10px; border-radius: 10px; border: 1px solid #eee; text-align: center; }
+        .s4-img { width: 80px; height: 70px; object-fit: contain; }
+        .s4-label { font-size: 0.7rem; display: block; margin-top: 5px; font-weight: bold; }
+
+        #s4-tray-container { height: 140px; background: white; border-top: 3px solid var(--gold-accent); display: flex; flex-direction: column; padding: 5px; position: relative; }
+        #s4-tray { flex: 1; display: flex; gap: 10px; overflow-x: auto; align-items: center; }
+        .tray-item { width: 80px; height: 80px; border: 1px solid #ddd; flex-shrink: 0; border-radius: 8px; }
+        .btn-check { position: absolute; top: -20px; right: 10px; background: var(--safety-green); color: white; border: none; padding: 8px 15px; border-radius: 20px; font-weight: bold; cursor: pointer; z-index: 1001; }
+
+        /* Bước 5: Bàn thí nghiệm */
+        #step5 { background-image: url('phonglab_main.jpg'); background-size: cover; }
+        #workbench-area { position: absolute; inset: 0; touch-action: none; }
+        .draggable-item { position: absolute; cursor: grab; user-select: none; }
+        .real-tool-img { width: 100px; height: auto; filter: drop-shadow(0 5px 5px rgba(0,0,0,0.3)); }
+        
+        /* Equation & Magnifier */
+        #equation-display { 
+            position: absolute; top: 10px; left: 50%; transform: translateX(-50%);
+            background: rgba(0, 45, 66, 0.9); color: #ffd700; padding: 10px 20px;
+            border-radius: 10px; font-size: 1.2rem; z-index: 5000; display: none; text-align: center; width: 80%;
+        }
+        
+        .doctor-avatar { position: absolute; top: 10px; right: 10px; width: 80px; height: 80px; border-radius: 50%; border: 3px solid var(--gold-accent); background: white; z-index: 200; overflow: hidden; }
+        .avatar-img { width: 100%; height: 100%; object-fit: cover; }
+        .speaking { animation: bobbing 0.5s infinite; }
+        @keyframes bobbing { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+
+        #mag-floating-btn { position: absolute; bottom: 20px; right: 20px; width: 50px; height: 50px; background: var(--primary-blue); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 2500; }
+        .btn-back-theory { position: absolute; bottom: 20px; left: 20px; z-index: 2000; background: #ff5e62; color: white; border: none; padding: 10px 20px; border-radius: 20px; font-weight: bold; }
+
+        /* Liquid & Effects */
+        .liquid-layer { position: absolute; bottom: 0; left: 0; width: 100%; z-index: 2; transition: height 0.5s; pointer-events: none; }
+        .lamp-flame { position: absolute; top: 20px; left: 50%; transform: translateX(-50%); width: 12px; height: 20px; background: orange; border-radius: 50% 50% 20% 20%; display: none; }
+    </style>
+</head>
+<body>
+    <div id="stage">
+        <div id="step1" class="screen active">
+           <div class="doctor-side"><div class="doctor-container"><img src="kien-sang.jpg" class="doctor-img"></div></div>
+            <div class="content-side" style="align-items: center; text-align: center;">
+                <h1 class="page1-h1">Chào mừng bạn đến với<br>phòng thí nghiệm ảo.</h1>
+                <span class="doctor-name">Tiến sĩ Kiến Sáng</span>
+                <p class="description">Sẵn sàng khám phá thế giới hóa học chưa?</p>
+                <button class="btn-main" onclick="handleStart()">Khám phá ngay</button>
+            </div>
+        </div>
+        
+        <div id="step2" class="screen">
+            <div class="doctor-side"><div class="doctor-container"><img src="kien-sang2.jpg" class="doctor-img"></div></div>
+            <div class="content-side">
+                <h2 style="color: var(--primary-blue); margin-bottom: 20px;">Chọn thí nghiệm</h2>
+                <select class="select-box" id="grade-select" onchange="updateLessons()"></select>
+                <select class="select-box" id="lesson-select" onchange="updateExperiments()" disabled></select>
+                <select class="select-box" id="exp-select" disabled></select>
+                <button class="btn-main" style="width: 100%; margin-top: 10px;" onclick="goToStep3()">VÀO PHÒNG THÍ NGHIỆM</button>
+            </div>
+        </div>
+        
+        <div id="step3" class="screen">
+            <div id="dr-avatar-s3" class="doctor-avatar"><img src="avatar.jpg" class="avatar-img"></div>
+            <div id="target-blouse" class="hotspot" onclick="checkItem('blouse')"></div>
+            <div id="target-glasses" class="hotspot" onclick="checkItem('glasses')"></div>
+            <div id="target-rules" class="hotspot" onclick="checkItem('rules')"></div>
+            <div id="ok-blouse" class="check-mark" style="top:30%; left:15%;">✓</div>
+            <div id="ok-glasses" class="check-mark" style="top:53%; right:15%;">✓</div>
+            <div id="ok-rules" class="check-mark" style="top:20%; right:15%;">✓</div>
+            <div id="rules-overlay" style="position:fixed; inset:0; background:rgba(0,0,0,0.8); z-index:1000; display:none; align-items:center; justify-content:center;">
+                <div style="position:relative; width:90%; max-width:400px; background:white; padding:10px; border-radius:10px;">
+                    <button style="position:absolute; top:-15px; right:-15px; background:red; color:white; border-radius:50%; width:30px; height:30px; border:none;" onclick="closeRules()">✕</button>
+                    <img src="Noiquy.jpg" style="width:100%; height:auto;">
+                </div>
+            </div>
+            <button class="btn-back-theory" onclick="backToStep2()">Quay lại</button>
+        </div>
+        
+        <div id="step4" class="screen">
+            <div id="s4-sidebar"></div>
+            <div id="s4-main-area">
+                <div id="dr-avatar-s4" class="doctor-avatar"><img src="avatar.jpg" class="avatar-img"></div>
+                <div id="s4-icon-grid"></div>
+                <div id="s4-tray-container">
+                    <button class="btn-check" id="main-check-btn" onclick="validateCurrentMode()">XONG DỤNG CỤ</button>
+                    <div id="s4-tray"></div>
+                </div>
+            </div>
+            <button class="btn-back-theory" onclick="backToStep2()">Quay lại</button>
+        </div>
+        
+        <div id="step5" class="screen">
+            <div id="dr-avatar-s5" class="doctor-avatar"><img src="avatar.jpg" class="avatar-img"></div>
+            <div id="workbench-area"></div>
+            <div id="magnifier-glass" style="position:absolute; width:150px; height:150px; border:4px solid #444; border-radius:50%; overflow:hidden; display:none; z-index:9999; pointer-events:none; background:white;">
+                <div id="magnifier-content" style="position:absolute; width:300%; height:300%; transform:scale(2);"></div>
+            </div>
+            <div id="mag-floating-btn" onclick="toggleMagnifier()">🔍</div>
+            <button class="btn-back-theory" onclick="backToStep2()">Quay lại</button>
+            <div id="equation-display"></div>
+        </div>
+    </div>
+
+    <script>
+        // --- LOGIC GIỮ NGUYÊN TỪ BẢN GỐC CỦA BẠN ---
+        let experimentData = {}, groupedTools = {}, groupedChems = {};
+        let currentExp = null, selectedItems = [], currentMode = "TOOLS", finalSelection = { tools: [], chems: [] };
+        const iconPath = "icons/";
+        let checks = { blouse: false, glasses: false, canCheckRules: false };
+        let magnifierActive = false;
+
+        function speak(text, callback, avatarId = 'dr-avatar-s3') {
+            if (typeof responsiveVoice !== 'undefined') {
+                responsiveVoice.cancel();
+                const av = document.getElementById(avatarId);
+                if (av) av.classList.add('speaking');
+                responsiveVoice.speak(text, "Vietnamese Female", {
+                    rate: 1, onend: () => { if (av) av.classList.remove('speaking'); if (callback) callback(); }
+                });
+            } else if (callback) callback();
+        }
+
+        function initApp() {
+            if (typeof rawData !== 'undefined') {
+                rawData.trim().split('\n').forEach(line => {
+                    if (!line.includes('|')) return;
+                    const [lop, bai, ten, dungcu, hoachat, pt, mota, effect, extra] = line.split('|').map(s => s.trim());
+                    const k = "Lớp " + lop;
+                    if (!experimentData[k]) experimentData[k] = {};
+                    if (!experimentData[k][bai]) experimentData[k][bai] = [];
+                    experimentData[k][bai].push({ name: ten, tools: dungcu, chems: hoachat, eq: pt, info: extra, description: mota, effect: effect });
+                });
+                initGrades();
+            }
+            if (typeof toolCategoryData !== 'undefined') {
+                toolCategoryData.trim().split('\n').forEach(line => {
+                    if (!line.includes('|')) return;
+                    const [nhom, ten, file] = line.split('|').map(s => s.trim());
+                    if (!groupedTools[nhom]) groupedTools[nhom] = [];
+                    groupedTools[nhom].push({ n: ten, f: file });
+                });
+            }
+            if (typeof chemicalDataRaw !== 'undefined') {
+                chemicalDataRaw.trim().split('\n').forEach(line => {
+                    if (!line.includes('|')) return;
+                    const [nhom, ten, file, congthuc] = line.split('|').map(s => s.trim());
+                    if (!groupedChems[nhom]) groupedChems[nhom] = [];
+                    groupedChems[nhom].push({ n: ten, f: file, formula: congthuc });
+                });
+            }
+        }
+
+        function handleStart() { showScreen('step2'); speak("Chào bạn! Hãy chọn thí nghiệm nhé."); }
+        function initGrades() { 
+            const gs = document.getElementById('grade-select'); 
+            gs.innerHTML = '<option value="">-- Chọn Lớp --</option>'; 
+            Object.keys(experimentData).forEach(g => gs.innerHTML += `<option value="${g}">${g}</option>`); 
+        }
+        function updateLessons() {
+            const g = document.getElementById('grade-select').value;
+            const ls = document.getElementById('lesson-select');
+            ls.innerHTML = '<option value="">-- Chọn Bài --</option>';
+            if (g) { ls.disabled = false; Object.keys(experimentData[g]).forEach(l => ls.innerHTML += `<option value="${l}">${l}</option>`); }
+        }
+        function updateExperiments() {
+            const g = document.getElementById('grade-select').value;
+            const l = document.getElementById('lesson-select').value;
+            const es = document.getElementById('exp-select');
+            es.innerHTML = '<option value="">-- Chọn Thí nghiệm --</option>';
+            if (l) { es.disabled = false; experimentData[g][l].forEach(e => es.innerHTML += `<option value="${e.name}">${e.name}</option>`); }
+        }
+
+        function goToStep3() {
+            if (!document.getElementById('exp-select').value) return alert("Chọn thí nghiệm!");
+            currentExp = experimentData[document.getElementById('grade-select').value][document.getElementById('lesson-select').value].find(e => e.name === document.getElementById('exp-select').value);
+            window.currentExp = currentExp;
+            showScreen('step3'); speak("Khoan đã, hãy trang bị bảo hộ nào.");
+        }
+
+        function checkItem(i) {
+            if (i === 'blouse' || i === 'glasses') {
+                if (checks[i]) return;
+                checks[i] = true;
+                document.getElementById('ok-' + i).style.display = 'block';
+                speak(i === 'blouse' ? "Đã mặc áo." : "Đã đeo kính.", () => {
+                    if (checks.blouse && checks.glasses) setTimeout(() => speak("Hãy đọc nội quy nào", () => checks.canCheckRules = true), 500);
+                });
+            } else if (i === 'rules' && checks.canCheckRules) {
+                document.getElementById('rules-overlay').style.display = 'flex';
+            }
+        }
+
+        function closeRules() {
+            document.getElementById('rules-overlay').style.display = 'none';
+            document.getElementById('ok-rules').style.display = 'block';
+            showScreen('step4'); setupSidebar("TOOLS");
+            speak("Hãy chuẩn bị dụng cụ thí nghiệm.", null, 'dr-avatar-s4');
+        }
+
+        function setupSidebar(mode) {
+            currentMode = mode;
+            const sidebar = document.getElementById('s4-sidebar');
+            sidebar.innerHTML = "";
+            const data = (mode === "TOOLS") ? groupedTools : groupedChems;
+            Object.keys(data).forEach((nhom, i) => {
+                const btn = document.createElement('button');
+                btn.className = 's4-cat-btn';
+                btn.innerText = (i + 1) + ". " + nhom;
+                btn.onclick = () => {
+                    document.querySelectorAll('.s4-cat-btn').forEach(b => b.classList.remove('active-cat'));
+                    btn.classList.add('active-cat');
+                    renderGrid(nhom);
+                };
+                sidebar.appendChild(btn);
+            });
+            renderGrid(Object.keys(data)[0]);
+        }
+
+        function renderGrid(nhom) {
+            const grid = document.getElementById('s4-icon-grid');
+            grid.innerHTML = "";
+            const items = (currentMode === "TOOLS") ? groupedTools[nhom] : groupedChems[nhom];
+            items.forEach(t => {
+                const d = document.createElement('div');
+                d.className = 's4-unit';
+                d.onclick = () => {
+                    const reqStr = (currentMode === "TOOLS") ? currentExp.tools : currentExp.chems;
+                    if (!reqStr.split(',').map(s => s.trim()).includes(t.n)) return speak("Món " + t.n + " này không cần thiết.", null, 'dr-avatar-s4');
+                    if (selectedItems.includes(t.n)) return;
+                    selectedItems.push(t.n);
+                    const item = document.createElement('div');
+                    item.className = 'tray-item';
+                    item.innerHTML = `<img src="${iconPath}${t.f}" style="width:100%; height:100%; object-fit:contain;">`;
+                    document.getElementById('s4-tray').appendChild(item);
+                };
+                d.innerHTML = `<img src="${iconPath}${t.f}" class="s4-img"><span class="s4-label">${t.n}</span>`;
+                grid.appendChild(d);
+            });
+        }
+
+        function validateCurrentMode() {
+            const reqStr = (currentMode === "TOOLS") ? currentExp.tools : currentExp.chems;
+            const missing = reqStr.split(',').map(s => s.trim()).filter(x => !selectedItems.includes(x));
+            if (missing.length > 0) speak("Thiếu: " + missing.join(", "), null, 'dr-avatar-s4');
+            else {
+                if (currentMode === "TOOLS") {
+                    finalSelection.tools = [...selectedItems]; selectedItems = [];
+                    document.getElementById('s4-tray').innerHTML = "";
+                    document.getElementById('main-check-btn').innerText = "XONG HÓA CHẤT";
+                    setupSidebar("CHEMICALS");
+                    speak("Bây giờ hãy chọn hóa chất.");
+                } else {
+                    finalSelection.chems = [...selectedItems];
+                    speak("Xong rồi! Bắt đầu thực hành.", () => goToStep5(), 'dr-avatar-s4');
+                }
+            }
+        }
+
+        function goToStep5() {
+            showScreen('step5');
+            const area = document.getElementById('workbench-area');
+            area.innerHTML = "";
+            // Tự động căn chỉnh vị trí trên Mobile/Desktop
+            const isMobile = window.innerWidth < 768;
+            const startX = isMobile ? 20 : 100;
+            const stepX = isMobile ? 100 : 180;
+
+            finalSelection.tools.forEach((n, i) => area.appendChild(createDraggableItem(n, startX + (i * stepX), isMobile ? 300 : 400, "glassware")));
+            finalSelection.chems.forEach((n, i) => area.appendChild(createDraggableItem(n, startX + (i * stepX), isMobile ? 150 : 250, "reagent")));
+            setupDragging();
+            speak("Chào mừng đến bàn thực hành!", null, 'dr-avatar-s5');
+        }
+
+        function createDraggableItem(name, x, y, type) {
+            const div = document.createElement('div');
+            div.className = 'draggable-item';
+            div.style.left = x + "px"; div.style.top = y + "px";
+            if (type === "reagent") {
+                let fImg = "Quytim.jpg";
+                const chemLines = chemicalDataRaw.trim().split('\n');
+                for (let l of chemLines) { const p = l.split('|').map(s => s.trim()); if (p[1] === name) { fImg = p[2]; break; } }
+                div.innerHTML = `<div class="reagent-bottle"><img src="assets/chemicals/${fImg}" class="real-tool-img" alt="${name}"></div>`;
+            } else {
+                div.innerHTML = Glassware.render(name, "id-" + Math.random().toString(36).substr(2, 9));
+                if(typeof LabActions !== 'undefined') LabActions.renderExtra(div, name);
+                div.ondblclick = () => LabActions.execute(div, name);
+                // Hỗ trợ chạm giữ trên mobile thay cho dblclick
+                let lastTap = 0;
+                div.addEventListener('touchend', (e) => {
+                    const now = new Date().getTime();
+                    if (now - lastTap < 300) LabActions.execute(div, name);
+                    lastTap = now;
+                });
+            }
+            return div;
+        }
+
+        function setupDragging() {
+            let active = null, offset = { x: 0, y: 0 };
+            const area = document.getElementById('workbench-area');
+            
+            const startDrag = (e) => {
+                const el = e.target.closest('.draggable-item');
+                if (el) {
+                    active = el;
+                    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+                    offset.x = clientX - active.offsetLeft;
+                    offset.y = clientY - active.offsetTop;
+                    active.style.zIndex = 5000;
+                }
+            };
+            const moveDrag = (e) => {
+                if (!active) return;
+                const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+                active.style.left = (clientX - offset.x) + "px";
+                active.style.top = (clientY - offset.y) + "px";
+                if (magnifierActive) updateMagnifierView();
+            };
+            const endDrag = () => {
+                if (active) {
+                    const img = active.querySelector('img');
+                    if (img && img.src.includes("Dinhsat")) LabActions.handleSolidInteraction(active);
+                    if (img && img.alt.includes("Quỳ tím")) LabActions.handleLitmusSpecial(active);
+                    LabActions.checkAllGlobalReactions();
+                    active.style.zIndex = Math.floor(parseInt(active.style.top)) + 500;
+                    active = null;
+                }
+            };
+
+            area.addEventListener('mousedown', startDrag);
+            area.addEventListener('touchstart', startDrag, {passive: false});
+            document.addEventListener('mousemove', moveDrag);
+            document.addEventListener('touchmove', moveDrag, {passive: false});
+            document.addEventListener('mouseup', endDrag);
+            document.addEventListener('touchend', endDrag);
+        }
+
+        function showScreen(id) { document.querySelectorAll('.screen').forEach(s => s.classList.remove('active')); document.getElementById(id).classList.add('active'); }
+        function toggleMagnifier() { magnifierActive = !magnifierActive; document.getElementById('magnifier-glass').style.display = magnifierActive ? 'block' : 'none'; }
+        function backToStep2() { location.reload(); } /* Đơn giản nhất là reload để reset mọi trạng thái */
+
+        window.onload = initApp;
+    </script>
+</body>
+</html>
